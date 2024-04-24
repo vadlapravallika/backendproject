@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Display</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Data Display</h1>
+    </div>
+    <div class="section">
+      <h2>Books</h2>
+      <div id="books"></div>
+    </div>
+    <div class="section">
+      <h2>Weather</h2>
+      <input type="text" id="cityInput" placeholder="Enter city name">
+      <button onclick="searchWeather()">Search</button>
+      <p id="weather-info"></p>
+    </div>
+    <div class="section">
+      <h2>JWT Token</h2>
+      <p id="jwt-token"></p>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
