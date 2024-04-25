@@ -2,14 +2,14 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color:#A3D8FF;
+    background-color: rgb(255, 255, 255);
   }
   
   .container {
     max-width: 800px;
     margin: 50px auto;
     padding: 20px;
-    background-color:#FF76CE;
+    background-color: #9BCDD2;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
