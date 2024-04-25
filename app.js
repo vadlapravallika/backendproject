@@ -2,13 +2,54 @@ const express = require('express');
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); // Correct import name
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+const PORT = 3001;
+const JWT_SECRET = 'a23353fbd7b767b88ad032d3b8a0343f13da3a53996bd65af5dcf116f4a75581'; // Step 1: Configure JWT Secret
+
+// Step 2: Create JWT Middleware
+app.use((req, res, next) => {
+  // Check if the request is for the login endpoint
+  if (req.path === '/login') {
+    return next(); // Skip JWT validation for the login endpoint
+  }
+  
+  // Validate JWT for other endpoints
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+});
+
+// Step 3: User Authentication
+app.post('/login', (req, res) => {
+  // Implement user authentication logic here
+  const username = req.body.username;
+  const password = req.body.password;
+  // Verify username and password
+  if (username === 'user' && password === 'password') {
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } else {
+    res.status(401).json({ message: 'Invalid username or password' });
+  }
+});
+
+// Step 4: Protect Routes
+app.get('/protected', (req, res) => {
+  res.json({ message: 'Protected route accessed successfully' });
+});
 
 // Secret key for JWT
 const secretKey = 'a23353fbd7b767b88ad032d3b8a0343f13da3a53996bd65af5dcf116f4a75581';
@@ -162,7 +203,6 @@ app.get('/weather', authenticateToken, async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

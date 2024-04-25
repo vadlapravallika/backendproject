@@ -2,12 +2,54 @@ const express = require('express');
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
+const jwt = require('jsonwebtoken'); // Correct import name
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+const JWT_SECRET = 'a23353fbd7b767b88ad032d3b8a0343f13da3a53996bd65af5dcf116f4a75581'; // Step 1: Configure JWT Secret
+
+// Step 2: Create JWT Middleware
+app.use((req, res, next) => {
+  // Check if the request is for the login endpoint
+  if (req.path === '/login') {
+    return next(); // Skip JWT validation for the login endpoint
+  }
+  
+  // Validate JWT for other endpoints
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+});
+
+// Step 3: User Authentication
+app.post('/login', (req, res) => {
+  // Implement user authentication logic here
+  const username = req.body.username;
+  const password = req.body.password;
+  // Verify username and password
+  if (username === 'user' && password === 'password') {
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } else {
+    res.status(401).json({ message: 'Invalid username or password' });
+  }
+});
+
+// Step 4: Protect Routes
+app.get('/protected', (req, res) => {
+  res.json({ message: 'Protected route accessed successfully' });
+});
 
 // GET all authors
 app.get('/authors', async (req, res) => {
@@ -24,6 +66,11 @@ app.get('/authors', async (req, res) => {
 app.post('/authors', async (req, res) => {
   const { name } = req.body;
   try {
+    // Validate name
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
     const newAuthor = await prisma.author.create({
       data: {
         name,
@@ -51,6 +98,11 @@ app.get('/genres', async (req, res) => {
 app.post('/genres', async (req, res) => {
   const { name } = req.body;
   try {
+    // Validate name
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
     const newGenre = await prisma.genre.create({
       data: {
         name,
@@ -83,6 +135,11 @@ app.get('/books', async (req, res) => {
 app.post('/books', async (req, res) => {
   const { title, authorId, genreId } = req.body;
   try {
+    // Validate title, authorId, and genreId
+    if (!title || !authorId || !genreId) {
+      return res.status(400).json({ error: 'Title, authorId, and genreId are required' });
+    }
+
     const newBook = await prisma.book.create({
       data: {
         title,
@@ -100,7 +157,6 @@ app.post('/books', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 }); 
-
 
 // Route to fetch weather data from the third-party weather API
 app.get('/weather', async (req, res) => {
@@ -133,11 +189,6 @@ app.get('/weather', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-  
-
-   
-  
 
 const PORT = process.env.PORT || 3001;
 
